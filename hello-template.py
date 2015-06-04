@@ -3,7 +3,22 @@ import Adafruit_BMP.BMP085 as BMP085
 import time
 import datetime
 import sys
+import math
+import Adafruit_CharLCD as LCD
 
+lcd_rs        = 25  # Note this might need to be changed to 21 for older revision Pi's.
+lcd_en        = 23
+lcd_d4        = 24
+lcd_d5        = 18
+lcd_d6        = 15
+lcd_d7        = 14
+lcd_backlight = 21
+lcd_columns = 16
+lcd_rows    = 2
+lcd = LCD.Adafruit_CharLCD(lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6, lcd_d7,lcd_columns, lcd_rows, lcd_backlight)
+lcd.message('Ethernet Based\nDAQ with RPi')
+time.sleep(2)
+lcd.clear()
 #From this
 import RPi.GPIO as GPIO, time, os
 DEBUG = 1;
@@ -123,13 +138,12 @@ def hello3():
 def hello():
     global countvalue
     tempr = "%.2f c" % bmp.read_temperature()
-    pressure = "%.2f hPa" %bmp.read_pressure()
+    pressure = "%2.2f Pa" %bmp.read_pressure()  
     altitude = "%.2f m" %bmp.read_altitude()
     
     # IR SENSOR CODE HERE 
     if GPIO.input(ir1) == 0:
 		countvalue = countvalue+1
-		
     if GPIO.input(ir2) == 0:
 		countvalue = countvalue-1
 		
@@ -146,6 +160,7 @@ def hello():
 		pulse_end = time.time()
     pulse_duration = pulse_end-pulse_start
     distance = pulse_duration * 17150
+    dist = distance
     distance = round(distance,2)
     #######################################################################3
     #########################################################################
@@ -158,15 +173,29 @@ def hello():
     csvfile = open("SENS.csv","a")
     csvfile.write(timeString + ',' + str(tempr) + ',' + str(pressure) + ',' + str(altitude) + ',' + str(countvalue) + ',' + str(distance) + '\r\n\r\n')
     csvfile.close()
+    lcd.set_cursor(0,0)
+    lcd.message(tempr)
+    
+    lcd.message(" ")
+    lcd.message(str(pressure))
+    lcd.message(str(pressure))
+    lcd.set_cursor(0,1)
+    lcd.message("Cnt:")
+    lcd.message(str(countvalue))
+    lcd.message(" ")
+    lcd.message("D:")
+    lcd.message(str(distance))
+    lcd.message("cm")
+    lcd.message("     ")
     templateData = {
-        'title' : 'HELLO!',
-        'time' : timeString,
-        'temp' :tempr,
-        'pres' :pressure,
-        'alt' : altitude,
-        'cnt' : countvalue,
-        'intens' : distance#this is ultrasonic sensor value
-        }
+	'title' : 'HELLO!',
+	'time' : timeString,
+	'temp' :tempr,
+	'pres' :pressure,
+	'alt' : altitude,
+	'cnt' : countvalue,
+	'intens' : distance #this is ultrasonic sensor value
+	}
     return render_template('main2.html',**templateData)
 
 if __name__ == "__main__":
